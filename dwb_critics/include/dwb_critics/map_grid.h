@@ -37,6 +37,7 @@
 
 #include <dwb_local_planner/trajectory_critic.h>
 #include <costmap_queue/costmap_queue.h>
+#include <memory>
 #include <vector>
 
 namespace dwb_critics
@@ -57,10 +58,12 @@ namespace dwb_critics
 class MapGridCritic: public dwb_local_planner::TrajectoryCritic
 {
 public:
+  MapGridCritic() : cell_values_(-1.0) {}
+
   // Standard TrajectoryCritic Interface
   void onInit() override;
   double scoreTrajectory(const dwb_msgs::Trajectory2D& traj) override;
-  void addGridScores(sensor_msgs::PointCloud& pc) override;
+  void addCriticVisualization(sensor_msgs::PointCloud& pc) override;
   double getScale() const override { return costmap_->getResolution() * 0.5 * scale_; }
 
   // Helper Functions
@@ -77,13 +80,14 @@ public:
    * @param y y-coordinate within the costmap
    * @return the score associated with that cell.
    */
-  inline double getScore(unsigned int x, unsigned int y) { return cell_values_[costmap_->getIndex(x, y)]; }
+  inline double getScore(unsigned int x, unsigned int y) { return cell_values_(x, y); }
 
   /**
    * @brief Sets the score of a particular cell to the obstacle cost
-   * @param index Index of the cell to mark
+   * @param x X coordinate of cell
+   * @param y Y coordinate of cell
    */
-  void setAsObstacle(unsigned int index);
+  void setAsObstacle(unsigned int x, unsigned int y);
 
 protected:
   /**
@@ -102,7 +106,7 @@ protected:
   class MapGridQueue : public costmap_queue::CostmapQueue
   {
   public:
-    MapGridQueue(costmap_2d::Costmap2D& costmap, MapGridCritic& parent)
+    MapGridQueue(nav_core2::Costmap& costmap, MapGridCritic& parent)
       : costmap_queue::CostmapQueue(costmap, true), parent_(parent) {}
     bool validCellToQueue(const costmap_queue::CellData& cell) override;
   protected:
@@ -112,7 +116,7 @@ protected:
   /**
    * @brief Clear the queue and set cell_values_ to the appropriate number of unreachableCellScore
    */
-  void reset();
+  void reset() override;
 
   /**
    * @brief Go through the queue and set the cells to the Manhattan distance from their parents
@@ -120,8 +124,7 @@ protected:
   void propogateManhattanDistances();
 
   std::shared_ptr<MapGridQueue> queue_;
-  costmap_2d::Costmap2D* costmap_;
-  std::vector<double> cell_values_;
+  nav_grid::VectorNavGrid<double> cell_values_;
   double obstacle_score_, unreachable_score_;  ///< Special cell_values
   bool stop_on_failure_;
   ScoreAggregationType aggregationType_;

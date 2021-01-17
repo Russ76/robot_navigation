@@ -38,6 +38,7 @@
 #include <ros/ros.h>
 #include <dynamic_reconfigure/server.h>
 #include <dwb_plugins/KinematicParamsConfig.h>
+#include <memory>
 
 namespace dwb_plugins
 {
@@ -88,7 +89,7 @@ public:
    */
   bool isValidSpeed(double x, double y, double theta);
 
-  typedef std::shared_ptr<KinematicParameters> Ptr;
+  using Ptr = std::shared_ptr<KinematicParameters>;
 protected:
   // For parameter descriptions, see cfg/KinematicParams.cfg
   double min_vel_x_, min_vel_y_;

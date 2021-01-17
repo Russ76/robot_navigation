@@ -38,6 +38,7 @@
 #include <ros/ros.h>
 #include <geometry_msgs/Pose2D.h>
 #include <nav_2d_msgs/Twist2D.h>
+#include <memory>
 
 namespace dwb_local_planner
 {
@@ -54,7 +55,7 @@ namespace dwb_local_planner
 class GoalChecker
 {
 public:
-  typedef std::shared_ptr<dwb_local_planner::GoalChecker> Ptr;
+  using Ptr = std::shared_ptr<dwb_local_planner::GoalChecker>;
 
   virtual ~GoalChecker() {}
 
@@ -63,6 +64,11 @@ public:
    * @param nh NodeHandle for grabbing parameters
    */
   virtual void initialize(const ros::NodeHandle& nh) = 0;
+
+  /**
+   * @brief Reset the state of the goal checker (if any)
+   */
+  virtual void reset() {}
 
   /**
    * @brief Check whether the goal should be considered reached
